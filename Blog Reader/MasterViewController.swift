@@ -18,19 +18,38 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        self.navigationItem.leftBarButtonItem = self.editButtonItem
-
-        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(insertNewObject(_:)))
-        self.navigationItem.rightBarButtonItem = addButton
-        if let split = self.splitViewController {
-            let controllers = split.viewControllers
-            self.detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
+        
+        
+        let url = URL(string:"https://www.googleapis.com/blogger/v3/blogs/10861780/posts?key=YOUR_API_KEY")!
+        
+        let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
+            print("executing")
+            if error != nil {
+                
+                print("data was not downloaded")
+            
+            } else {
+                
+                if let urlContent = data {
+                    
+                    do {
+                        
+                        let jsonContent = try JSONSerialization.jsonObject(with: urlContent, options: JSONSerialization.ReadingOptions.mutableContainers)
+                        print(jsonContent)
+                        
+                    } catch {
+                       
+                        print("Json encoding failed")
+                        
+                    }
+                    
+                }
+                
+            }
         }
-    }
 
-    override func viewWillAppear(_ animated: Bool) {
-        self.clearsSelectionOnViewWillAppear = self.splitViewController!.isCollapsed
-        super.viewWillAppear(animated)
+        task.resume()
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -92,22 +111,22 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         // Return false if you do not want the specified item to be editable.
         return true
     }
-
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            let context = self.fetchedResultsController.managedObjectContext
-            context.delete(self.fetchedResultsController.object(at: indexPath))
-                
-            do {
-                try context.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nserror = error as NSError
-                fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
-            }
-        }
-    }
+//
+//    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+//        if editingStyle == .delete {
+//            let context = self.fetchedResultsController.managedObjectContext
+//            context.delete(self.fetchedResultsController.object(at: indexPath))
+//                
+//            do {
+//                try context.save()
+//            } catch {
+//                // Replace this implementation with code to handle the error appropriately.
+//                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+//                let nserror = error as NSError
+//                fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
+//            }
+//        }
+//    }
 
     func configureCell(_ cell: UITableViewCell, withEvent event: Event) {
         cell.textLabel!.text = event.timestamp!.description
