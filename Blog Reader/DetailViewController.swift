@@ -15,9 +15,9 @@ class DetailViewController: UIViewController {
     func configureView() {
         // Update the user interface for the detail item.
         
-        self.title = self.detailItem?.title
-        
         if let detail = self.detailItem {
+            
+            self.title = self.detailItem?.title
             
             if let blogWebView = self.webView {
                 blogWebView.loadHTMLString(detail.content!, baseURL: nil)
