@@ -20,7 +20,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         // Do any additional setup after loading the view, typically from a nib.
         
         
-        let url = URL(string:"https://www.googleapis.com/blogger/v3/blogs/10861780/posts?key=YOUR_API_KEY")!
+        let url = URL(string:"https://www.googleapis.com/blogger/v3/blogs/10861780/posts?key=PLACE_YOUR_API_KEY")!
         
         let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
             print("executing")
@@ -35,7 +35,70 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
                     do {
                         
                         let jsonContent = try JSONSerialization.jsonObject(with: urlContent, options: JSONSerialization.ReadingOptions.mutableContainers)
-                        print(jsonContent)
+                       // print(jsonContent)
+                        
+                        if let items = (jsonContent as! NSDictionary)["items"] as? NSArray {
+                            
+                            let context = self.fetchedResultsController.managedObjectContext
+                            
+                            let request = NSFetchRequest<Event>(entityName: "Event")
+                            
+                            do {
+                                
+                                let results = try context.fetch(request)
+                                
+                                if results.count > 0 {
+                                    
+                                    for result in results {
+                                        
+                                        context.delete(result)
+                                        
+                                        // Save the context.
+                                        do {
+                                        
+                                            try context.save()
+                                        
+                                        } catch {
+                                            
+                                            print("Specific delete failed")
+                                            
+                                        }
+                                        
+                                    }
+                                }
+                                
+                            } catch {
+                                
+                            }
+                            
+                            
+                            for item in items {
+                                print((item as! NSDictionary)["published"]!  )
+                                print((item as! NSDictionary)["title"]!)
+                                print((item as! NSDictionary)["content"]!)
+                                
+                                let context = self.fetchedResultsController.managedObjectContext
+                                let newEvent = Event(context: context)
+                                
+                                // If appropriate, configure the new managed object.
+                                newEvent.timestamp = NSDate()
+                                newEvent.content = (item as! NSDictionary)["content"]! as? String
+                                newEvent.publishedDate = (item as! NSDictionary)["published"]! as? String
+                                newEvent.title = (item as! NSDictionary)["title"]! as? String
+                                
+                                
+                                // Save the context.
+                                do {
+                                    try context.save()
+                                } catch {
+                                    // Replace this implementation with code to handle the error appropriately.
+                                    // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+                                    let nserror = error as NSError
+                                    fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
+                                }
+                            }
+                            self.tableView.reloadData()
+                        }
                         
                     } catch {
                        
@@ -129,7 +192,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
 //    }
 
     func configureCell(_ cell: UITableViewCell, withEvent event: Event) {
-        cell.textLabel!.text = event.timestamp!.description
+        cell.textLabel!.text = event.title
     }
 
     // MARK: - Fetched results controller
